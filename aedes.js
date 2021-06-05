@@ -40,8 +40,7 @@ module.exports = function (RED) {
       });
     }
   }
-  function obtainPermissionByPassword(config, accountname, accesskey) {
-
+  function obtainPermissionByPassword(config, accountname, accesskey) { 
     return new Promise((resolve, reject) => {
       //cachec operation start
       let key = JSON.stringify({
@@ -247,8 +246,10 @@ module.exports = function (RED) {
       if(client && !client.user && client.req && client.req.headers && client.req.headers.access_token ){
         let accessToken = client.req.headers.access_token;
         if(accessToken.groups.includes("/site/"+site) || accessToken.groups.includes("/site")){
-          if(accessToken.resource_access[config.idpClient].roles.contains("writter")){
-            return authorizeCalback(null, subscription);
+          if(!subscription && accessToken.resource_access[config.idpClient].roles.includes("writter")){
+            return authorizeCallback(callback, subscription);
+          }else if(subscription && accessToken.resource_access[config.idpClient].roles.includes("reader")){
+            return authorizeCallback(callback, subscription);
           }else{
             return callback(new Error('No Permission'));
           }
@@ -259,7 +260,9 @@ module.exports = function (RED) {
           obtainPermissionByPassword(config,accountname, null)
           .then(accessToken => {
             if(accessToken.groups.includes("/site/"+site) || accessToken.groups.includes("/site")){
-              if(accessToken.resource_access[config.idpClient].roles.includes("writter")){
+              if(!subscription && accessToken.resource_access[config.idpClient].roles.includes("writter")){
+                return authorizeCallback(callback, subscription);
+              }else if(subscription && accessToken.resource_access[config.idpClient].roles.includes("reader")){
                 return authorizeCallback(callback, subscription);
               }else{
                 return callback(new Error('No Permission'));
