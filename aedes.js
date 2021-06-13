@@ -52,7 +52,7 @@ module.exports = function (RED) {
         resolve(cacheToken.acceess_token);
         return;
       }else if(cacheToken){
-        accesskey = cacheToken.pwd;
+        if(!accesskey) accesskey = cacheToken.pwd;
         delete accessTokenCache[key];
       }
       //cache operation end		
@@ -130,7 +130,7 @@ module.exports = function (RED) {
     config.idpClient=process.env.IDP_CLIENT; //TOAI
     config.idpRealm=process.env.IDP_REALM //toai
     config.idpClientCredential = process.env.IDP_CLIENTCREDENTIAL;
-    config.idpUsetls = process.env.IDP_USETLS;
+    config.idpUsetls =  (process.env.IDP_USETLS === 'true');
     config.idpURI = `/auth/realms/${config.idpRealm}/protocol/openid-connect/token`;    
     config.authzConfigJson = JSON.parse(fs.readFileSync('/data/authz-config.json'));
     //-------------end of configuration overwrite------------
@@ -245,7 +245,7 @@ module.exports = function (RED) {
       }      
       if(client && !client.user && client.req && client.req.headers && client.req.headers.access_token ){
         let accessToken = client.req.headers.access_token;
-        if(accessToken.groups.includes("/site") || accessToken.groups.includes("/site/"+site) ){
+        if(accessToken.groups.includes("/site") || ( site && accessToken.groups.includes("/site/"+site) ) ){
           if(!subscription && accessToken.resource_access[config.idpClient].roles.includes("writter")){
             return authorizeCallback(callback, subscription);
           }else if(subscription && accessToken.resource_access[config.idpClient].roles.includes("reader")){
@@ -259,7 +259,7 @@ module.exports = function (RED) {
       }else if(client && client.user){
           obtainPermissionByPassword(config,accountname, null)
           .then(accessToken => {
-            if(accessToken.groups.includes("/site") || accessToken.groups.includes("/site/"+site) ){
+            if(accessToken.groups.includes("/site") || ( site && accessToken.groups.includes("/site/"+site) ) ){
               if(!subscription && accessToken.resource_access[config.idpClient].roles.includes("writter")){
                 return authorizeCallback(callback, subscription);
               }else if(subscription && accessToken.resource_access[config.idpClient].roles.includes("reader")){
