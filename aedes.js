@@ -153,6 +153,34 @@ module.exports = function (RED) {
     const broker = new aedes.Server(aedesSettings);
     let server = net.createServer(broker.handle);
 
+    if (this.mqtt_ws_port) {
+      // Awkward check since http or ws do not fire an error event in case the port is in use
+      const testServer = net.createServer();
+      testServer.once('error', function (err) {
+        if (err.code === 'EADDRINUSE') {
+          node.error('Error: Port ' + config.mqtt_ws_port + ' is already in use');
+        } else {
+          node.error('Error creating net server on port ' + config.mqtt_ws_port + ', ' + err.toString());
+        }
+      });
+      testServer.once('listening', function () {
+        testServer.close();
+      });
+
+      testServer.once('close', function () {
+        httpServer = http.createServer();
+        wss = ws.createServer({
+          server: httpServer
+        }, broker.handle);
+        httpServer.listen(config.mqtt_ws_port, function () {
+          node.log('Binding aedes mqtt server on ws port: ' + config.mqtt_ws_port);
+        });
+      });
+      testServer.listen(config.mqtt_ws_port, function () {
+        node.log('Checking ws port: ' + config.mqtt_ws_port);
+      });
+    }
+
     if (this.mqtt_ws_path !== '') {
       if (!serverUpgradeAdded) {
         RED.server.on('upgrade', handleServerUpgrade);
