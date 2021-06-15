@@ -153,6 +153,9 @@ module.exports = function (RED) {
     const broker = new aedes.Server(aedesSettings);
     let server = net.createServer(broker.handle);
 
+    let wss = null;
+    let httpServer = null;
+
     if (this.mqtt_ws_port) {
       // Awkward check since http or ws do not fire an error event in case the port is in use
       const testServer = net.createServer();
