@@ -275,7 +275,7 @@ module.exports = function (RED) {
         site = null;
       }      
       if(client && !client.user && client.req && client.req.headers && client.req.headers.access_token ){
-        let accessToken = client.req.headers.access_token;
+        let accessToken = jwt_decode(client.req.headers.access_token);
         if(accessToken.groups.includes("/site") || ( site && accessToken.groups.includes("/site/"+site) ) ){
           if(!subscription && accessToken.resource_access[config.idpClient].roles.includes("writter")){
             return authorizeCallback(callback, subscription);
