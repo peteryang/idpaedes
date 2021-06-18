@@ -429,13 +429,28 @@ module.exports = function (RED) {
     broker.on('closed', function () {
       node.debug('Closed event');
     });
-
     this.on('close', function (done) {
       broker.close(function () {
         node.log('Unbinding aedes mqtt server from port: ' + config.mqtt_port);
         server.close(function () {
           node.debug('after server.close(): ');
-          done();
+          if (node.mqtt_ws_path !== '') {
+            node.log('Unbinding aedes mqtt server from ws path: ' + node.fullPath);
+            delete listenerNodes[node.fullPath];
+            node.server.close();
+          }          
+          if (wss) {
+            node.log('Unbinding aedes mqtt server from ws port: ' + config.mqtt_ws_port);
+            wss.close(function () {
+              node.debug('after wss.close(): ');
+              httpServer.close(function () {
+                node.debug('after httpServer.close(): ');
+                done();
+              });
+            });
+          } else {
+            done();
+          }
         });
       });
     });
