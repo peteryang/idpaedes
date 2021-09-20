@@ -32,6 +32,18 @@ module.exports = function (RED) {
 
   const accessTokenCache = {};
 
+  function removeToken(client){
+    if(!client || !client.user) return;
+    var accountname = client.user;
+    let key = JSON.stringify({
+      preferred_username: accountname
+    });
+    let cacheToken = accessTokenCache[key];
+    if(cacheToken){
+      delete accessTokenCache[key];
+    }
+  }
+
   function handleServerUpgrade (request, socket, head) {
     const pathname = new URL(request.url, 'http://example.org').pathname;
     if (Object.prototype.hasOwnProperty.call(listenerNodes, pathname)) {
@@ -48,12 +60,9 @@ module.exports = function (RED) {
       });
   
       let cacheToken = accessTokenCache[key];
-      if(cacheToken && cacheToken.acceess_token && cacheToken.acceess_token.exp > (new Date().getTime())/1000){
+      if(cacheToken && cacheToken.acceess_token){
         resolve(cacheToken.acceess_token);
         return;
-      }else if(cacheToken){
-        if(!accesskey) accesskey = cacheToken.pwd;
-        delete accessTokenCache[key];
       }
       //cache operation end		
       const body = querystring.stringify({
@@ -344,6 +353,7 @@ module.exports = function (RED) {
     });
 
     broker.on('clientDisconnect', function (client) {
+      removeToken(client);
       const msg = {
         topic: 'clientDisconnect',
         payload: {
