@@ -1,6 +1,6 @@
 {
   "name": "idpaedes",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Node Red MQTT broker node based on aedes.js",
   "dependencies": {
     "aedes": "^0.46.0",
