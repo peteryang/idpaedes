@@ -60,7 +60,7 @@ module.exports = function (RED) {
       });
   
       let cacheToken = accessTokenCache[key];
-      if(cacheToken && cacheToken.acceess_token){
+      if(cacheToken && cacheToken.acceess_token && (!accesskey || cacheToken.pwd === accesskey ) ){
         resolve(cacheToken.acceess_token);
         return;
       }
@@ -246,7 +246,7 @@ module.exports = function (RED) {
           callback(null, true);
           return;
         }      
-        if (username && password){ 
+        if (username && password && username.length>3 && password.length > 3){ 
           obtainPermissionByPassword(config, username, password) 
           .then(accessToken => {
             client.user = username;		
